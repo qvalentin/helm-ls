@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	lspinternal "github.com/mrjosh/helm-ls/internal/lsp"
-	"github.com/mrjosh/helm-ls/pkg/chart"
 
 	"github.com/mrjosh/helm-ls/internal/util"
+	"github.com/mrjosh/helm-ls/pkg/chart"
 	"github.com/mrjosh/helm-ls/pkg/chartutil"
 	"go.lsp.dev/jsonrpc2"
 	lsp "go.lsp.dev/protocol"

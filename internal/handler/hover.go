@@ -113,6 +113,7 @@ func (h *langHandler) handleHover(ctx context.Context, reply jsonrpc2.Replier, r
 	for _, completionItem := range toSearch {
 		if searchWord == completionItem.Name {
 			result := buildHoverResponse(fmt.Sprint(completionItem.Doc), wordRange)
+
 			return reply(ctx, result, err)
 		}
 	}

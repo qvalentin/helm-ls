@@ -9,7 +9,10 @@ import (
 	"strings"
 
 	lspinternal "github.com/mrjosh/helm-ls/internal/lsp"
+<<<<<<< HEAD
 
+=======
+>>>>>>> 02f2d47 (feat(ast): start using an ast for hover)
 	"github.com/mrjosh/helm-ls/internal/util"
 	"github.com/mrjosh/helm-ls/pkg/chart"
 	"github.com/mrjosh/helm-ls/pkg/chartutil"
@@ -33,28 +36,47 @@ func (h *langHandler) handleHover(ctx context.Context, reply jsonrpc2.Replier, r
 		return errors.New("Could not get document: " + params.TextDocument.URI.Filename())
 	}
 
+	ast := lspinternal.ParseAst(doc)
+
+	child := lspinternal.NodeAtPosition(ast, params.Position)
+
+	logger.Println(child.Type())
+	logger.Println(child.Content([]byte(doc.Content)))
+
 	var (
-		currentNode = lspinternal.NodeAtPosition(doc.Ast, params.Position)
-		parent      = currentNode.Parent()
-		wordRange   = lspinternal.GetLspRangeForNode(currentNode)
-		word        string
+		word string
 	)
 
-	if parent == nil {
-		return reply(ctx, nil, errors.New("could not parse ast correctly"))
-	}
+	parent := child.Parent()
 
+	logger.Println("parent Type", parent.Type())
 	pt := parent.Type()
-	ct := currentNode.Type()
+	ct := child.Type()
+
 	if pt == "function_call" && ct == "identifier" {
-		word = currentNode.Content([]byte(doc.Content))
+		word = child.Content([]byte(doc.Content))
 	}
 	if (pt == "selector_expression" || pt == "field") && (ct == "identifier" || ct == "field_identifier") {
-		word = lspinternal.GetFieldIdentifierPath(currentNode, doc)
+		word = lspinternal.GetFieldIdentifierPath(child, doc)
 	}
 	if ct == "dot" {
-		word = lspinternal.TraverseIdentifierPathUp(currentNode, doc)
+		word = lspinternal.TraverseIdentifierPathUp(child, doc)
 	}
+
+	// switch (parent.Type() {
+	// case "function_call":
+	// 	word = child.Content([]byte(doc.Content))
+	// // case "identifier":
+	// // 	word = lspinternal.GetFieldIdentifierPath(child, doc)
+	// // case "field_identifier":
+	// // 	word = lspinternal.GetFieldIdentifierPath(child, doc)
+	// case "field":
+	// 	word = lspinternal.GetFieldIdentifierPath(child, doc)
+	// 	// case "selector_expression":
+	// 	// case "dot":
+	// 	// 	word = lspinternal.TraverseIdentifierPathUp(child, doc)
+	//
+	// }
 
 	var (
 		splitted         = strings.Split(word, ".")
@@ -92,6 +114,20 @@ func (h *langHandler) handleHover(ctx context.Context, reply jsonrpc2.Replier, r
 		case "Capabilities":
 			value, err = h.getBuiltInObjectsHover(capabilitiesVals, variableSplitted[1])
 		}
+
+		if value == "" {
+			value = "\"\""
+		}
+
+		if err == nil {
+			content := lsp.MarkupContent{
+				Kind:  lsp.Markdown,
+				Value: value,
+			}
+			result := lsp.Hover{
+				Contents: content,
+				// TODO: could add a range
+			}
 
 		if err == nil {
 			result := buildHoverResponse(value, wordRange)

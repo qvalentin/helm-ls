@@ -1,15 +1,17 @@
 package lsp
 
 import (
+	"strings"
+
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/gotemplate"
 	lsp "go.lsp.dev/protocol"
 )
 
-func ParseAst(doc *document) *sitter.Tree {
+func ParseAst(content string) *sitter.Tree {
 	parser := sitter.NewParser()
 	parser.SetLanguage(gotemplate.GetLanguage())
-	return parser.Parse(nil, []byte(doc.Content))
+	return parser.Parse(nil, []byte(content))
 }
 
 func NodeAtPosition(tree *sitter.Tree, position lsp.Position) *sitter.Node {
@@ -66,4 +68,39 @@ func TraverseIdentifierPathUp(node *sitter.Node, doc *document) string {
 	}
 	return TraverseIdentifierPathUp(parent, doc)
 
+}
+
+func (d *document) ApplyChangesToAst(changes []lsp.TextDocumentContentChangeEvent) {
+	for _, change := range changes {
+		startIndex := uint32(d.BytePositionAt(change.Range.Start))
+		oldEndIndex := uint32(d.BytePositionAt(change.Range.End))
+
+		textLines := strings.Split(change.Text, "\n")
+
+		endPointColumn := change.Range.Start.Character + uint32(len(textLines[0]))
+		if len(textLines) > 1 {
+			endPointColumn = uint32(len(textLines[len(textLines)-1]))
+		}
+		logger.Println("StartIndex: %d, OldEndIndex: ", startIndex, oldEndIndex)
+
+		editInput := sitter.EditInput{
+			StartIndex:  startIndex,
+			OldEndIndex: oldEndIndex,
+			NewEndIndex: startIndex + uint32(len([]byte(change.Text))),
+			StartPoint: sitter.Point{
+				Row:    change.Range.Start.Line,
+				Column: change.Range.Start.Character,
+			},
+			OldEndPoint: sitter.Point{
+				Row:    change.Range.End.Line,
+				Column: change.Range.End.Character,
+			},
+			NewEndPoint: sitter.Point{
+				Row:    change.Range.Start.Line + uint32(len(textLines)-1),
+				Column: uint32(endPointColumn),
+			},
+		}
+		logger.Println("EditInput: %i", editInput)
+		d.Ast.Edit(editInput)
+	}
 }

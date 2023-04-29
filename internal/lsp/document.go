@@ -6,6 +6,8 @@ import (
 
 	"github.com/mrjosh/helm-ls/internal/util"
 	"github.com/pkg/errors"
+	sitter "github.com/smacker/go-tree-sitter"
+	"github.com/smacker/go-tree-sitter/gotemplate"
 	lsp "go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 )
@@ -38,6 +40,7 @@ func (s *DocumentStore) DidOpen(params lsp.DidOpenTextDocumentParams) (*document
 		URI:     uri,
 		Path:    path,
 		Content: params.TextDocument.Text,
+		Ast:  ParseAst(params.TextDocument.Text),
 	}
 	s.documents[path] = doc
 	return doc, nil
@@ -72,15 +75,42 @@ type document struct {
 	NeedsRefreshDiagnostics bool
 	Content                 string
 	lines                   []string
+	Ast                     *sitter.Tree
 }
 
 // ApplyChanges updates the content of the document from LSP textDocument/didChange events.
 func (d *document) ApplyChanges(changes []lsp.TextDocumentContentChangeEvent) {
+	logger.Println("ApplyChanges ",changes)
+	d.ApplyChangesToAst(changes)
 	for _, change := range changes {
-    d.Content = d.Content[:change.Range.Start.Character] + change.Text + d.Content[change.Range.End.Character:]
+		newContentStart := d.Content[:change.Range.Start.Character] 
+		newContentMiddle :=change.Text
+		newContentEnd :=d.Content[change.Range.End.Character:]
+		newContent := newContentStart + newContentMiddle+ newContentEnd
+		logger.Println("New contentStart",newContentStart)
+		logger.Println("New middle",newContentMiddle)
+		logger.Println("New end",newContentEnd)
+    d.Content = newContent
 	}
 
 	d.lines = nil
+
+	parser := sitter.NewParser()
+	parser.SetLanguage(gotemplate.GetLanguage())
+	d.Ast = parser.Parse(d.Ast, []byte(d.Content))
+}
+
+
+func (d* document) BytePositionAt(pos lsp.Position) int {
+	byteLines := d.GetByteLines()
+	index := 0
+	bytePosition := 0
+		for index < int(pos.Line) {
+			bytePosition += len(byteLines[index]) +1 
+			index++
+		}
+		bytePosition += int(pos.Character)
+		return bytePosition
 }
 
 // WordAt returns the word found at the given location.
@@ -127,6 +157,14 @@ func (d *document) GetLines() []string {
 		d.lines = strings.Split(d.Content, "\n")
 	}
 	return d.lines
+}
+
+func (d *document) GetByteLines() [][]byte {
+	byteLines := [][]byte{}
+	for _, line := range d.GetLines() {
+		byteLines = append(byteLines, []byte(line))
+	}
+	return byteLines
 }
 
 // LookBehind returns the n characters before the given position, on the same line.

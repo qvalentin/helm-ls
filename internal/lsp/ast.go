@@ -1,7 +1,6 @@
 package lsp
 
 import (
-<<<<<<< HEAD
 	"context"
 
 	"github.com/mrjosh/helm-ls/internal/tree-sitter/gotemplate"
@@ -14,22 +13,10 @@ func ParseAst(content string) *sitter.Tree {
 	parser.SetLanguage(gotemplate.GetLanguage())
 	tree, _ := parser.ParseCtx(context.Background(), nil, []byte(content))
 	return tree
-=======
-	sitter "github.com/smacker/go-tree-sitter"
-	"github.com/smacker/go-tree-sitter/gotemplate"
-	lsp "go.lsp.dev/protocol"
-)
-
-func ParseAst(doc *document) *sitter.Tree {
-	parser := sitter.NewParser()
-	parser.SetLanguage(gotemplate.GetLanguage())
-	return parser.Parse(nil, []byte(doc.Content))
->>>>>>> 02f2d47 (feat(ast): start using an ast for hover)
 }
 
 func NodeAtPosition(tree *sitter.Tree, position lsp.Position) *sitter.Node {
 	start := sitter.Point{Row: position.Line, Column: position.Character}
-<<<<<<< HEAD
 	return tree.RootNode().NamedDescendantForPointRange(start, start)
 }
 
@@ -57,35 +44,16 @@ func GetFieldIdentifierPath(node *sitter.Node, doc *Document) (path string) {
 }
 
 func buildFieldIdentifierPath(node *sitter.Node, doc *Document) string {
-=======
 
-	return tree.RootNode().NamedDescendantForPointRange(start, start)
-}
-
-func GetFieldIdentifierPath(node *sitter.Node, doc *document) (path string) {
-	logger.Println("Parent node: ", node.Parent().String())
-	path = buildFieldIdentifierPath(node, doc)
-	logger.Println("buildFieldIdentifierPath:", path)
-	return path
-
-}
-
-func buildFieldIdentifierPath(node *sitter.Node, doc *document) string {
-
->>>>>>> 02f2d47 (feat(ast): start using an ast for hover)
 	prepend := node.PrevNamedSibling()
 
 	currentPath := node.Content([]byte(doc.Content))
 	if prepend != nil {
-<<<<<<< HEAD
 		nodeContent := node.Content([]byte(doc.Content))
 		if nodeContent == "." {
 			nodeContent = ""
 		}
 		currentPath = prepend.Content([]byte(doc.Content)) + "." + nodeContent
-=======
-		currentPath = prepend.Content([]byte(doc.Content)) + "." + node.Content([]byte(doc.Content))
->>>>>>> 02f2d47 (feat(ast): start using an ast for hover)
 	}
 
 	if currentPath[0:1] == "$" {
@@ -97,17 +65,9 @@ func buildFieldIdentifierPath(node *sitter.Node, doc *document) string {
 	}
 
 	return TraverseIdentifierPathUp(node, doc) + currentPath
-<<<<<<< HEAD
 }
 
 func TraverseIdentifierPathUp(node *sitter.Node, doc *Document) string {
-=======
-
-}
-
-func TraverseIdentifierPathUp(node *sitter.Node, doc *document) string {
-
->>>>>>> 02f2d47 (feat(ast): start using an ast for hover)
 	parent := node.Parent()
 
 	if parent == nil {
@@ -116,7 +76,6 @@ func TraverseIdentifierPathUp(node *sitter.Node, doc *document) string {
 
 	switch parent.Type() {
 	case "range_action":
-<<<<<<< HEAD
 		if node.PrevNamedSibling() == nil {
 			return TraverseIdentifierPathUp(parent, doc)
 		}
@@ -150,15 +109,4 @@ func GetLspRangeForNode(node *sitter.Node) lsp.Range {
 			Character: end.Column,
 		},
 	}
-=======
-		logger.Println("Range action found ")
-		return TraverseIdentifierPathUp(parent, doc) + parent.NamedChild(0).Content([]byte(doc.Content)) + "[0]"
-	case "with_action":
-		logger.Println("With action found")
-		return TraverseIdentifierPathUp(parent, doc) + parent.NamedChild(0).Content([]byte(doc.Content))
-
-	}
-	return TraverseIdentifierPathUp(parent, doc)
-
->>>>>>> 02f2d47 (feat(ast): start using an ast for hover)
 }

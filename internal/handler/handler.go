@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/mrjosh/helm-ls/internal/adapter/fs"
+	"github.com/mrjosh/helm-ls/internal/adapter/yamlls"
 	lsplocal "github.com/mrjosh/helm-ls/internal/lsp"
 	"github.com/mrjosh/helm-ls/pkg/chart"
 	"github.com/mrjosh/helm-ls/pkg/chartutil"
@@ -18,20 +19,23 @@ import (
 var logger = log.GetLogger()
 
 type langHandler struct {
-	connPool      jsonrpc2.Conn
-	linterName    string
-	documents     *lsplocal.DocumentStore
-	values        chartutil.Values
-	chartMetadata chart.Metadata
+	connPool        jsonrpc2.Conn
+	linterName      string
+	documents       *lsplocal.DocumentStore
+	values          chartutil.Values
+	chartMetadata   chart.Metadata
+	yamllsConnector *yamlls.YamllsConnector
 }
 
 func NewHandler(connPool jsonrpc2.Conn) jsonrpc2.Handler {
 	fileStorage, _ := fs.NewFileStorage("")
+	documents := lsplocal.NewDocumentStore(fileStorage)
 	handler := &langHandler{
-		linterName: "helm-lint",
-		connPool:   connPool,
-		documents:  lsplocal.NewDocumentStore(fileStorage),
-		values:     make(map[string]interface{}),
+		linterName:      "helm-lint",
+		connPool:        connPool,
+		documents:       documents,
+		values:          make(map[string]interface{}),
+		yamllsConnector: yamlls.NewYamllsConnector("", connPool, documents),
 	}
 	logger.Printf("helm-lint-langserver: connections opened")
 	return jsonrpc2.ReplyHandler(handler.handle)
@@ -72,6 +76,8 @@ func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Repli
 	if err := json.Unmarshal(req.Params(), &params); err != nil {
 		return err
 	}
+
+	h.yamllsConnector.CallInitialize(params)
 
 	vf := filepath.Join(params.RootURI.Filename(), "values.yaml")
 	vals, err := chartutil.ReadValuesFile(vf)
@@ -116,6 +122,8 @@ func (h *langHandler) handleTextDocumentDidOpen(ctx context.Context, reply jsonr
 		return reply(ctx, nil, err)
 	}
 
+	h.yamllsConnector.Conn.Notify(context.Background(), lsp.MethodTextDocumentDidOpen, params)
+
 	if _, err = h.documents.DidOpen(params); err != nil {
 		logger.Println(err)
 		return reply(ctx, nil, err)
@@ -143,6 +151,7 @@ func (h *langHandler) handleTextDocumentDidSave(ctx context.Context, reply jsonr
 		return err
 	}
 
+	h.yamllsConnector.Conn.Notify(context.Background(), lsp.MethodTextDocumentDidSave, params)
 	notification, err := lsplocal.NotifcationFromLint(ctx, h.connPool, params.TextDocument.URI)
 	return reply(ctx, notification, err)
 }

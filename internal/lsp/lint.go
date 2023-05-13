@@ -24,7 +24,7 @@ import (
 
 var logger = log.GetLogger()
 
-func NotifcationFromLint(ctx context.Context, conn jsonrpc2.Conn, doc *document) (*jsonrpc2.Notification, error) {
+func NotifcationFromLint(ctx context.Context, conn jsonrpc2.Conn, doc *Document) (*jsonrpc2.Notification, error) {
 	diagnostics, err := GetDiagnostics(doc.URI)
 
 	if err != nil {

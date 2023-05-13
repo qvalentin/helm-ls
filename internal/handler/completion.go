@@ -47,7 +47,20 @@ func (h *langHandler) handleTextDocumentCompletion(ctx context.Context, reply js
 	// logger.Println(params.Position.Character)
 	// params.Position.Character = params.Position.Character - 1
 	// logger.Println(params.Position.Character)
-	word := completionAstParsing(doc, params.Position)
+	word, err := completionAstParsing(doc, params.Position)
+
+	if err != nil {
+
+		logger.Println("Calling yamlls for completions")
+		var response = reflect.New(reflect.TypeOf(lsp.CompletionList{})).Interface()
+		_, err = h.yamllsConnector.Conn.Call(ctx, lsp.MethodTextDocumentCompletion, params, response)
+		if err != nil {
+			logger.Println("Error Calling yamlls for completions", err)
+		}
+
+		logger.Println("Got completions from yamlls", response)
+		return reply(ctx, response, err)
+	}
 
 	var (
 		splitted         = strings.Split(word, ".")
@@ -95,7 +108,7 @@ func (h *langHandler) handleTextDocumentCompletion(ctx context.Context, reply js
 	return reply(ctx, items, err)
 }
 
-func completionAstParsing(doc *lsplocal.Document, position lsp.Position) string {
+func completionAstParsing(doc *lsplocal.Document, position lsp.Position) (string, error) {
 	var (
 		currentNode   = lsplocal.NodeAtPosition(doc.Ast, position)
 		pointToLoopUp = sitter.Point{
@@ -109,6 +122,9 @@ func completionAstParsing(doc *lsplocal.Document, position lsp.Position) string 
 	logger.Println("relevantChildNode", relevantChildNode.Type())
 
 	ct := relevantChildNode.Type()
+	if ct == "text" {
+		return "", fmt.Errorf("Not in a template")
+	}
 	if ct == "identifier" {
 		word = relevantChildNode.Content([]byte(doc.Content))
 	}
@@ -120,7 +136,7 @@ func completionAstParsing(doc *lsplocal.Document, position lsp.Position) string 
 		logger.Println("GetFieldIdentifierPath")
 		word = lsplocal.GetFieldIdentifierPath(relevantChildNode, doc)
 	}
-	return word
+	return word, nil
 }
 
 func findRelevantChildNode(currentNode *sitter.Node, pointToLookUp sitter.Point) *sitter.Node {

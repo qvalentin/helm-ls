@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strings"
 
+	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 )
 
@@ -93,4 +94,16 @@ func ValueAt(str string, index int) string {
 	}
 
 	return ""
+}
+
+func PositionToIndex(pos protocol.Position, content []byte) int {
+	index := 0
+	for i := 0; i < int(pos.Line); i++ {
+		if i < int(pos.Line) {
+			index = index + strings.Index(string(content[index:]), "\n") + 1
+		}
+	}
+
+	index = index + int(pos.Character)
+	return index
 }

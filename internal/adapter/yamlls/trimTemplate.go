@@ -1,10 +1,7 @@
 package yamlls
 
 import (
-
-	// lsplocal "github.com/mrjosh/helm-ls/internal/lsp"
 	sitter "github.com/smacker/go-tree-sitter"
-	// lsp "go.lsp.dev/protocol"
 )
 
 func trimTemplateForYamllsFromAst(ast *sitter.Tree, text string) string {

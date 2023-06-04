@@ -19,13 +19,17 @@ func (yamllsConnector YamllsConnector) DocumentDidOpen(ast *sitter.Tree, params 
 	(*yamllsConnector.Conn).Notify(context.Background(), lsp.MethodTextDocumentDidOpen, params)
 }
 
-func (yamllsConnector YamllsConnector) DocumentDidSave(ast *sitter.Tree, params lsp.DidSaveTextDocumentParams) {
+func (yamllsConnector YamllsConnector) DocumentDidSave(doc *lsplocal.Document, params lsp.DidSaveTextDocumentParams) {
 	if yamllsConnector.Conn == nil {
 		return
 	}
-	params.Text = trimTemplateForYamllsFromAst(ast, params.Text)
+	params.Text = trimTemplateForYamllsFromAst(doc.Ast, params.Text)
 
 	(*yamllsConnector.Conn).Notify(context.Background(), lsp.MethodTextDocumentDidSave, params)
+
+	yamllsConnector.DocumentDidChangeFullSync(doc, lsp.DidChangeTextDocumentParams{TextDocument: lsp.VersionedTextDocumentIdentifier{
+		TextDocumentIdentifier: params.TextDocument,
+	}})
 }
 
 func (yamllsConnector YamllsConnector) DocumentDidChange(doc *lsplocal.Document, params lsp.DidChangeTextDocumentParams) {
@@ -47,5 +51,21 @@ func (yamllsConnector YamllsConnector) DocumentDidChange(doc *lsplocal.Document,
 	}
 
 	logger.Println("Sending DocumentDidChange", params)
+	(*yamllsConnector.Conn).Notify(context.Background(), lsp.MethodTextDocumentDidChange, params)
+}
+
+func (yamllsConnector YamllsConnector) DocumentDidChangeFullSync(doc *lsplocal.Document, params lsp.DidChangeTextDocumentParams) {
+	if yamllsConnector.Conn == nil {
+		return
+	}
+	var trimmedText = trimTemplateForYamllsFromAst(doc.Ast, doc.Content)
+
+	params.ContentChanges = []lsp.TextDocumentContentChangeEvent{
+		{
+			Text: trimmedText,
+		},
+	}
+
+	logger.Println("Sending DocumentDidChange with full sync", params)
 	(*yamllsConnector.Conn).Notify(context.Background(), lsp.MethodTextDocumentDidChange, params)
 }

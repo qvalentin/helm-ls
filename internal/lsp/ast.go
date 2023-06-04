@@ -123,3 +123,10 @@ func GetLspRangeForNode(node *sitter.Node) lsp.Range {
 		},
 	}
 }
+
+func GetSitterPointForLspPos(pos lsp.Position) sitter.Point {
+	return sitter.Point{
+		Row:    pos.Line,
+		Column: pos.Character,
+	}
+}

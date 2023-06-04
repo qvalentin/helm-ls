@@ -162,7 +162,7 @@ func (h *langHandler) handleTextDocumentDidSave(ctx context.Context, reply jsonr
 		return errors.New("Could not get document: " + params.TextDocument.URI.Filename())
 	}
 
-	h.yamllsConnector.DocumentDidSave(doc.Ast, params)
+	h.yamllsConnector.DocumentDidSave(doc, params)
 	notification, err := lsplocal.NotifcationFromLint(ctx, h.connPool, doc)
 	return reply(ctx, notification, err)
 }

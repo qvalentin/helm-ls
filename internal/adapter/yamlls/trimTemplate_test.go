@@ -25,7 +25,7 @@ yaml: test
 		Ast:     lsplocal.ParseAst(documentText),
 	}
 
-	var trimmed = trimTemplateForYamlls(doc.Ast, documentText)
+	var trimmed = trimTemplateForYamllsFromAst(doc.Ast, documentText)
 
 	var result = trimmed == trimmedText
 
@@ -108,6 +108,39 @@ spec:
       threshold: '100'
       query: sum(rate(http_requests_total{deployment="my-deployment"}[2m]))
 # yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/keda.sh/scaledobject_v1alpha1.json
+         
+`
+	doc := &lsplocal.Document{
+		Content: documentText,
+		Ast:     lsplocal.ParseAst(documentText),
+	}
+
+	var trimmed = trimTemplateForYamllsFromAst(doc.Ast, documentText)
+
+	var result = trimmed == trimmedText
+
+	if !result {
+		t.Errorf("Trimmed templated was not as expected but was %s ", trimmed)
+	} else {
+		t.Log("Trimmed templated was as expected")
+	}
+}
+
+func TestTrimTemplateFromAst3(t *testing.T) {
+
+	var documentText = `
+{{ if eq .Values.service.myParameter "true" }}
+{{ if eq .Values.service.second "true" }}
+apiVersion: keda.sh/v1alpha1
+{{ end }}
+{{ end }}
+`
+
+	var trimmedText = `
+                                              
+                                         
+apiVersion: keda.sh/v1alpha1
+         
          
 `
 	doc := &lsplocal.Document{

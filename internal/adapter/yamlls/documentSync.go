@@ -13,7 +13,9 @@ func (yamllsConnector YamllsConnector) DocumentDidOpen(doc *lsplocal.Document, p
 	if yamllsConnector.Conn == nil {
 		return
 	}
-	params.TextDocument.Text = trimTemplateForYamlls(doc.Ast, params.TextDocument.Text)
+	params.TextDocument.Text = trimTemplateForYamllsFromAst(doc.Ast, params.TextDocument.Text)
+
+	logger.Println("Sending to yamlls", params.TextDocument.Text)
 
 	yamllsConnector.Conn.Notify(context.Background(), lsp.MethodTextDocumentDidOpen, params)
 }

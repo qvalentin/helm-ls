@@ -9,33 +9,51 @@ import (
 
 func trimTemplateForYamllsFromAst(ast *sitter.Tree, text string) string {
 
-	return prettyPrintNode(ast.RootNode(), text)
+	var result = []byte(text)
+	logger.Println(ast.RootNode())
+	prettyPrintNode(ast.RootNode(), []byte(text), result)
+	return string(result)
 
 }
 
-func prettyPrintNode(node *sitter.Node, text string) string {
-
-	var result = ""
+func prettyPrintNode(node *sitter.Node, previous []byte, result []byte) {
 
 	var childCount = node.ChildCount()
 
 	if childCount == 0 {
-		logger.Println("End of recursion", string(node.Content([]byte(text))))
+		logger.Println("End of recursion", string(node.Content(previous)))
 		logger.Println("Type", node.Type())
-		result = result + string(node.Content([]byte(text)))
+
 	}
 
 	switch node.Type() {
-	case "interpreted_string_literal":
-		result = result + string(node.Content([]byte(text)))
-		return result
-
+	case "block_action":
+		earaseTemplate(node.Child(0), previous, result)
+		earaseTemplate(node.Child(1), previous, result)
+		earaseTemplate(node.Child(2), previous, result)
+		earaseTemplate(node.Child(3), previous, result)
+		earaseTemplate(node.Child(5), previous, result)
+		earaseTemplate(node.Child(6), previous, result)
+		earaseTemplate(node.Child(7), previous, result)
+	case "if_action":
+		earaseTemplate(node.Child(0), previous, result)
+		earaseTemplate(node.Child(1), previous, result)
+		earaseTemplate(node.Child(2), previous, result)
+		earaseTemplate(node.Child(3), previous, result)
+		earaseTemplate(node.Child(int(node.ChildCount()-3)), previous, result)
+		earaseTemplate(node.Child(int(node.ChildCount()-2)), previous, result)
+		earaseTemplate(node.Child(int(node.ChildCount())-1), previous, result)
+	default:
+		for i := 0; i < int(childCount); i++ {
+			prettyPrintNode(node.Child(i), previous, result)
+		}
 	}
 
-	for i := 0; i < int(childCount); i++ {
-		result = result + prettyPrintNode(node.Child(i), text)
+}
+
+func earaseTemplate(node *sitter.Node, previous []byte, result []byte) {
+	logger.Println("Content", node.Content(previous))
+	for i := range []byte(node.Content(previous)) {
+		result[int(node.StartByte())+i] = byte(' ')
 	}
-
-	return result
-
 }

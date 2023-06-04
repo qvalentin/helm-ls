@@ -28,6 +28,6 @@ func (h *langHandler) handleTextDocumentDidChange(ctx context.Context, reply jso
 	// Synchronise changes into the doc's ContentChanges
 	doc.ApplyChanges(params.ContentChanges)
 
-	h.yamllsConnector.DocumentDidChange(params)
+	h.yamllsConnector.DocumentDidChange(doc, params)
 	return reply(ctx, nil, nil)
 }

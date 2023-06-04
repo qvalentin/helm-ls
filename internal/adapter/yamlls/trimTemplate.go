@@ -23,13 +23,16 @@ func prettyPrintNode(node *sitter.Node, previous []byte, result []byte) {
 			switch child.Type() {
 			case
 				"if",
+				"selector_expression",
 				"else",
 				"range",
 				"function_call",
 				"with",
 				"define",
 				"{{",
+				"{{-",
 				"}}",
+				"-}}",
 				"end",
 				"interpreted_string_literal",
 				"block":

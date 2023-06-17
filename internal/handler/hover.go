@@ -40,8 +40,7 @@ func (h *langHandler) handleHover(ctx context.Context, reply jsonrpc2.Replier, r
 	)
 
 	if parent == nil {
-		err = errors.New("Could not parse ast correctly.")
-		return reply(ctx, nil, err)
+		return reply(ctx, nil, errors.New("could not parse ast correctly"))
 	}
 
 	pt := parent.Type()
@@ -125,6 +124,21 @@ func (h *langHandler) handleHover(ctx context.Context, reply jsonrpc2.Replier, r
 		}
 	}
 	return reply(ctx, lsp.Hover{}, err)
+}
+
+func buildHoverResponse(value string, wordRange lsp.Range) lsp.Hover {
+	if value == "" {
+		value = "\"\""
+	}
+	content := lsp.MarkupContent{
+		Kind:  lsp.Markdown,
+		Value: value,
+	}
+	result := lsp.Hover{
+		Contents: content,
+		Range:    &wordRange,
+	}
+	return result
 }
 
 func (h *langHandler) getChartMetadataHover(key string) (string, error) {

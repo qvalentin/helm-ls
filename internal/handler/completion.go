@@ -17,6 +17,14 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+type ChildNodeType string
+
+const (
+	ChildNodeTypeIdentifier = "identifier"
+	ChildNodeTypeDot        = "dot"
+	ChildNodeTypeDotSymbol  = "."
+)
+
 var (
 	emptyItems               = make([]lsp.CompletionItem, 0)
 	functionsCompletionItems = make([]lsp.CompletionItem, 0)
@@ -66,7 +74,7 @@ func (h *langHandler) handleTextDocumentCompletion(ctx context.Context, reply js
 
 	var (
 		splitted         = strings.Split(word, ".")
-		items            = make([]lsp.CompletionItem, 0)
+		items            []lsp.CompletionItem
 		variableSplitted = []string{}
 	)
 
@@ -111,6 +119,7 @@ func (h *langHandler) handleTextDocumentCompletion(ctx context.Context, reply js
 }
 
 func completionAstParsing(doc *lsplocal.Document, position lsp.Position) (string, error) {
+
 	var (
 		currentNode   = lsplocal.NodeAtPosition(doc.Ast, position)
 		pointToLoopUp = sitter.Point{

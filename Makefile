@@ -4,12 +4,14 @@ export GOBIN?=$(BIN)
 export GO=$(shell which go)
 export CGO_ENABLED=1
 export GOX=$(BIN)/gox
+export XGO=$(BIN)/xgo
 
 $(eval GIT_COMMIT=$(shell git rev-parse --short HEAD))
 $(eval BRANCH_NAME=$(shell git rev-parse --abbrev-ref HEAD))
 $(eval COMPILED_BY=$(shell hostname))
+$(eval BUILD_TIME=$(shell date -u '+%Y-%m-%d_%I:%M:%S%p'))
 
-export GO_LDFLAGS="-X main.CompiledBy=${COMPILED_BY} -X main.Version=${GIT_COMMIT} -X main.BranchName=${BRANCH_NAME} -X main.BuildTime=`date -u '+%Y-%m-%d_%I:%M:%S%p'`"
+GO_LDFLAGS := -X "main.CompiledBy=${COMPILED_BY}" -X "main.Version=${GIT_COMMIT}" -X "main.BranchName=${BRANCH_NAME}" -X "main.BuildTime=${BUILD_TIME}"
 
 export LINTER=$(GOBIN)/golangci-lint
 export LINTERCMD=run --no-config -v \
@@ -18,14 +20,10 @@ export LINTERCMD=run --no-config -v \
 	--skip-files ".*_test.go" \
 	--sort-results \
 	--disable-all \
-	--enable=structcheck \
-	--enable=deadcode \
 	--enable=gocyclo \
 	--enable=ineffassign \
 	--enable=revive \
-	--enable=goimports \
 	--enable=errcheck \
-	--enable=varcheck \
 	--enable=goconst \
 	--enable=megacheck \
 	--enable=misspell \
@@ -58,28 +56,31 @@ ci-lint:
 
 # Check if golangci-lint not exists, then install it
 install-metalinter:
-	@$(GO) get -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1
-	@$(GO) install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1
+	@$(GO) get -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.2
+	@$(GO) install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.2
 
 test:
-	$(GO) test ./... -v -race
+	@$(GO) test ./... -v -race
 
 install-gox:
 	@$(GO) install github.com/mitchellh/gox@v1.0.1
 
+install-xgo:
+	@$(GO) install src.techknowlogick.com/xgo@latest
+
+
 .PHONY: build-linux
-build-linux: install-gox
-	@$(GOX) -ldflags ${GO_LDFLAGS} --arch=amd64 --os=linux --output="dist/helm_ls_{{.OS}}_{{.Arch}}"
-	@$(GOX) -ldflags ${GO_LDFLAGS} --arch=arm --os=linux --output="dist/helm_ls_{{.OS}}_{{.Arch}}"
+build-linux: install-xgo
+	echo ${GO_LDFLAGS}
+	$(XGO) -dest dist -ldflags '$(GO_LDFLAGS)' -targets 'linux/amd64,linux/arm64' -out helm_ls .
 
 .PHONY: build-macOS
-build-macOS: install-gox
-	@$(GOX) -ldflags ${GO_LDFLAGS} --arch=amd64 --os=darwin --output="dist/helm_ls_{{.OS}}_{{.Arch}}"
-	@$(GOX) -ldflags ${GO_LDFLAGS} --arch=arm64 --os=darwin --output="dist/helm_ls_{{.OS}}_{{.Arch}}"
+build-macOS: install-xgo
+	$(XGO) -dest dist -ldflags '$(GO_LDFLAGS)' -targets 'darwin-10.12/amd64' -out helm_ls .
 
 .PHONY: build-windows
-build-windows: install-gox
-	@$(GOX) -ldflags ${GO_LDFLAGS} --arch=amd64 --os=windows --output="dist/helm_ls_{{.OS}}_{{.Arch}}"
+build-windows: install-xgo
+	$(XGO) -buildmode exe -dest dist -ldflags '-linkmode external -extldflags "-static" $(GO_LDFLAGS)' -targets 'windows/amd64' -out helm_ls .
 
 .PHONY: build-artifacts
 build-artifacts:

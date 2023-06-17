@@ -42,7 +42,7 @@ func NewHandler(connPool jsonrpc2.Conn) jsonrpc2.Handler {
 	return jsonrpc2.ReplyHandler(handler.handle)
 }
 
-func (h *langHandler) handle(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) (err error) {
+func (h *langHandler) handle(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 	logger.Debug("helm-lint-langserver: request:", req)
 
 	switch req.Method() {
@@ -71,25 +71,31 @@ func (h *langHandler) handle(ctx context.Context, reply jsonrpc2.Replier, req js
 	return jsonrpc2.MethodNotFoundHandler(ctx, reply, req)
 }
 
-func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) (err error) {
+func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 
 	var params lsp.InitializeParams
 	if err := json.Unmarshal(req.Params(), &params); err != nil {
 		return err
 	}
 
+	if len(params.WorkspaceFolders) == 0 {
+		return errors.New("length WorkspaceFolders is 0")
+	}
+
 	h.yamllsConnector.CallInitialize(params)
 
-	vf := filepath.Join(params.RootURI.Filename(), "values.yaml")
+	vf := filepath.Join(params.WorkspaceFolders[0].Name, "values.yaml")
 	vals, err := chartutil.ReadValuesFile(vf)
 	if err != nil {
+		logger.Println("Error loaing values.yaml file", err)
 		return err
 	}
 	h.values = vals
 
-	chartFile := filepath.Join(params.RootURI.Filename(), "Chart.yaml")
+	chartFile := filepath.Join(params.WorkspaceFolders[0].Name, "Chart.yaml")
 	chartMetadata, err := chartutil.LoadChartfile(chartFile)
 	if err != nil {
+		logger.Println("Error loaing Chart.yaml file", err)
 		return err
 	}
 	h.chartMetadata = *chartMetadata
@@ -97,7 +103,7 @@ func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Repli
 	return reply(ctx, lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{
 			TextDocumentSync: lsp.TextDocumentSyncOptions{
-				Change:    lsp.TextDocumentSyncKindIncremental,
+				Change:    lsp.TextDocumentSyncKindFull,
 				OpenClose: true,
 				Save: &lsp.SaveOptions{
 					IncludeText: true,
@@ -112,7 +118,7 @@ func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Repli
 	}, nil)
 }
 
-func (h *langHandler) handleShutdown(_ context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) (err error) {
+func (h *langHandler) handleShutdown(_ context.Context, _ jsonrpc2.Replier, _ jsonrpc2.Request) (err error) {
 	return h.connPool.Close()
 }
 

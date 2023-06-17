@@ -2,7 +2,6 @@ package lsp
 
 import (
 	"bytes"
-	"regexp"
 	"strings"
 
 	"github.com/mrjosh/helm-ls/internal/util"
@@ -174,9 +173,6 @@ func (d *Document) LookForward(pos lsp.Position, length int) string {
 	return line[charIdx:(charIdx + length)]
 }
 
-var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
-var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
-
 // LinkFromRoot returns a Link to this document from the root of the given
 // notebook.
 //func (d *document) LinkFromRoot(nb *core.Notebook) (*documentLink, error) {
@@ -192,7 +188,7 @@ var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
 
 // DocumentLinkAt returns the internal or external link found in the document
 // at the given position.
-func (d *Document) DocumentLinkAt(pos lsp.Position) (*documentLink, error) {
+//func (d *Document) DocumentLinkAt(pos lsp.Position) (*documentLink, error) {
 	//links, err := d.DocumentLinks()
 	//if err != nil {
 		//return nil, err
@@ -204,8 +200,8 @@ func (d *Document) DocumentLinkAt(pos lsp.Position) (*documentLink, error) {
 		//}
 	//}
 
-	return nil, nil
-}
+	//return nil, nil
+//}
 
 // DocumentLinks returns all the internal and external links found in the
 // document.
@@ -288,14 +284,14 @@ func (d *Document) DocumentLinkAt(pos lsp.Position) (*documentLink, error) {
 	//return strutil.Contains(note.Tags, targetWord)
 //}
 
-type documentLink struct {
-	Href          string
-	RelativeToDir string
-	Range         lsp.Range
-	// HasTitle indicates whether this link has a title information. For
-	// example [[filename]] doesn't but [[filename|title]] does.
-	HasTitle bool
-	// IsWikiLink indicates whether this link is a [[WikiLink]] instead of a
-	// regular Markdown link.
-	IsWikiLink bool
-}
+//type documentLink struct {
+	//Href          string
+	//RelativeToDir string
+	//Range         lsp.Range
+	//// HasTitle indicates whether this link has a title information. For
+	//// example [[filename]] doesn't but [[filename|title]] does.
+	//HasTitle bool
+	//// IsWikiLink indicates whether this link is a [[WikiLink]] instead of a
+	//// regular Markdown link.
+	//IsWikiLink bool
+//}

@@ -20,19 +20,38 @@ func handleDiagnostics(req jsonrpc2.Request, clientConn jsonrpc2.Conn, documents
 	if !ok {
 		logger.Println("Error handling diagnostic. Could not get document: " + params.URI.Filename())
 	}
-	doc.DiagnosticsCache.Yamldiagnostics = filterDiagnostics(params.Diagnostics, doc.Ast)
+	doc.DiagnosticsCache.Yamldiagnostics = filterDiagnostics(params.Diagnostics, doc.Ast, doc.Content)
 	params.Diagnostics = doc.DiagnosticsCache.GetMergedDiagnostics()
 
 	clientConn.Notify(context.Background(), lsp.MethodTextDocumentPublishDiagnostics, &params)
 }
 
-func filterDiagnostics(diagnostics []lsp.Diagnostic, ast *sitter.Tree) (filtered []lsp.Diagnostic) {
+func filterDiagnostics(diagnostics []lsp.Diagnostic, ast *sitter.Tree, content string) (filtered []lsp.Diagnostic) {
 	filtered = []lsp.Diagnostic{}
 	for _, diagnostic := range diagnostics {
-		node := lsplocal.FindRelevantChildNode(ast.RootNode(), lsplocal.GetSitterPointForLspPos(diagnostic.Range.Start))
-		if node.Type() == "text" {
+
+		middlePointIsText := isMiddlePointText(diagnostic, ast)
+
+		node := lsplocal.NodeAtPosition(ast, diagnostic.Range.Start)
+		childNode := lsplocal.FindRelevantChildNode(ast.RootNode(), lsplocal.GetSitterPointForLspPos(diagnostic.Range.Start))
+		diagnostic.Message = "Yamlls: " + diagnostic.Message
+		if node.Type() == "text" && childNode.Type() == "text" && middlePointIsText {
+			logger.Println("Diagnostic", diagnostic)
+			logger.Println("Node", node.Content([]byte(content)))
 			filtered = append(filtered, diagnostic)
 		}
 	}
 	return filtered
+}
+
+func isMiddlePointText(diagnostic lsp.Diagnostic, ast *sitter.Tree) bool {
+	middlePointIsText := true
+	if diagnostic.Range.Start.Line == diagnostic.Range.End.Line {
+		middlePoint := (diagnostic.Range.Start.Character + diagnostic.Range.End.Character) / 2
+		middlePosition := diagnostic.Range.Start
+		middlePosition.Character = middlePoint
+		middleNode := lsplocal.NodeAtPosition(ast, middlePosition)
+		middlePointIsText = middleNode.Type() == "text"
+	}
+	return middlePointIsText
 }

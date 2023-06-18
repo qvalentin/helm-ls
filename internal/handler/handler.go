@@ -103,7 +103,7 @@ func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Repli
 	return reply(ctx, lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{
 			TextDocumentSync: lsp.TextDocumentSyncOptions{
-				Change:    lsp.TextDocumentSyncKindFull,
+				Change:    lsp.TextDocumentSyncKindIncremental,
 				OpenClose: true,
 				Save: &lsp.SaveOptions{
 					IncludeText: true,

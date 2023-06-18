@@ -29,29 +29,14 @@ func handleDiagnostics(req jsonrpc2.Request, clientConn jsonrpc2.Conn, documents
 func filterDiagnostics(diagnostics []lsp.Diagnostic, ast *sitter.Tree, content string) (filtered []lsp.Diagnostic) {
 	filtered = []lsp.Diagnostic{}
 	for _, diagnostic := range diagnostics {
-
-		middlePointIsText := isMiddlePointText(diagnostic, ast)
-
 		node := lsplocal.NodeAtPosition(ast, diagnostic.Range.Start)
 		childNode := lsplocal.FindRelevantChildNode(ast.RootNode(), lsplocal.GetSitterPointForLspPos(diagnostic.Range.Start))
 		diagnostic.Message = "Yamlls: " + diagnostic.Message
-		if node.Type() == "text" && childNode.Type() == "text" && middlePointIsText {
+		if node.Type() == "text" && childNode.Type() == "text" {
 			logger.Println("Diagnostic", diagnostic)
 			logger.Println("Node", node.Content([]byte(content)))
 			filtered = append(filtered, diagnostic)
 		}
 	}
 	return filtered
-}
-
-func isMiddlePointText(diagnostic lsp.Diagnostic, ast *sitter.Tree) bool {
-	middlePointIsText := true
-	if diagnostic.Range.Start.Line == diagnostic.Range.End.Line {
-		middlePoint := (diagnostic.Range.Start.Character + diagnostic.Range.End.Character) / 2
-		middlePosition := diagnostic.Range.Start
-		middlePosition.Character = middlePoint
-		middleNode := lsplocal.NodeAtPosition(ast, middlePosition)
-		middlePointIsText = middleNode.Type() == "text"
-	}
-	return middlePointIsText
 }

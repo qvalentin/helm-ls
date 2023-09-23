@@ -33,8 +33,8 @@ func filterDiagnostics(diagnostics []lsp.Diagnostic, ast *sitter.Tree, content s
 		childNode := lsplocal.FindRelevantChildNode(ast.RootNode(), lsplocal.GetSitterPointForLspPos(diagnostic.Range.Start))
 		diagnostic.Message = "Yamlls: " + diagnostic.Message
 		if node.Type() == "text" && childNode.Type() == "text" {
-			logger.Println("Diagnostic", diagnostic)
-			logger.Println("Node", node.Content([]byte(content)))
+			logger.Debug("Diagnostic", diagnostic)
+			logger.Debug("Node", node.Content([]byte(content)))
 			filtered = append(filtered, diagnostic)
 		}
 	}

@@ -17,7 +17,7 @@ func prettyPrintNode(node *sitter.Node, previous []byte, result []byte) {
 	switch node.Type() {
 	case "if_action":
 		for i := 0; i < int(childCount); i++ {
-			// logger.Println("FieldName", node.FieldNameForChild(i))
+			logger.Debug("FieldName", node.FieldNameForChild(i))
 			child := node.Child(i)
 			if child.Type() == "end" {
 				earaseTemplate(child, previous, result)
@@ -59,8 +59,17 @@ func prettyPrintNode(node *sitter.Node, previous []byte, result []byte) {
 				prettyPrintNode(child, previous, result)
 			}
 		}
-	case "comment", "define_action":
+	case "define_action":
 		earaseTemplate(node, previous, result)
+	case "comment", "variable_definition":
+		earaseTemplate(node, previous, result)
+		var prevSibling, nextSibling = node.PrevSibling(), node.NextSibling()
+		if prevSibling != nil {
+			earaseTemplate(prevSibling, previous, result)
+		}
+		if nextSibling != nil {
+			earaseTemplate(nextSibling, previous, result)
+		}
 	default:
 		for i := 0; i < int(childCount); i++ {
 			prettyPrintNode(node.Child(i), previous, result)
@@ -69,7 +78,7 @@ func prettyPrintNode(node *sitter.Node, previous []byte, result []byte) {
 }
 
 func earaseTemplate(node *sitter.Node, previous []byte, result []byte) {
-	// logger.Println("Content that is earased", node.Content(previous))
+	logger.Debug("Content that is earased", node.Content(previous))
 	for i := range []byte(node.Content(previous)) {
 		result[int(node.StartByte())+i] = byte(' ')
 	}

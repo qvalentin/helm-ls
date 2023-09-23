@@ -159,6 +159,10 @@ metadata:
               
 		`,
 	},
+	{documentText: `{{- $x := "test" -}}`, trimmedText: `                    `},
+	{documentText: `{{ $x := "test" }}`, trimmedText: `                  `},
+	{documentText: `{{ /* comment */ }}`, trimmedText: `                   `},
+	{documentText: `{{define "name"}} T1 {{end}}`, trimmedText: `                            `},
 }
 
 func TestTrimTemplate(t *testing.T) {

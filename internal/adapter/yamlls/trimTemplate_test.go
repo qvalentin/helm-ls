@@ -163,6 +163,38 @@ metadata:
 	{documentText: `{{ $x := "test" }}`, trimmedText: `                  `},
 	{documentText: `{{ /* comment */ }}`, trimmedText: `                   `},
 	{documentText: `{{define "name"}} T1 {{end}}`, trimmedText: `                            `},
+	{
+		documentText: `
+          {{- if .Values.controller.customStartupProbe }}
+          startupProbe: {}
+          {{- else if .Values.controller.startupProbe.enabled }}
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.controller.containerPorts.controller }}
+            initialDelaySeconds: {{ .Values.controller.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.controller.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.controller.startupProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.controller.startupProbe.successThreshold }}
+            failureThreshold: {{ .Values.controller.startupProbe.failureThreshold }}
+          {{- end }}
+	  `,
+		trimmedText: `
+                                                         
+          startupProbe: {}
+                                                                
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.controller.containerPorts.controller }}
+            initialDelaySeconds: {{ .Values.controller.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.controller.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.controller.startupProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.controller.startupProbe.successThreshold }}
+            failureThreshold: {{ .Values.controller.startupProbe.failureThreshold }}
+                    
+	  `,
+	},
 }
 
 func TestTrimTemplate(t *testing.T) {

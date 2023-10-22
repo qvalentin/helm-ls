@@ -25,7 +25,7 @@ func TestIsInElseBranch(t *testing.T) {
 	t3 := ast.RootNode().NamedDescendantForPointRange(t3_start, t3_start)
 
 	if (t1.Content([]byte(template))) != " t1 " || (t2.Content([]byte(template))) != " t2 " || (t3.Content([]byte(template))) != " t3 " {
-		t.Errorf("Nodes were not correclty selected")
+		t.Errorf("Nodes were not correctly selected")
 	}
 
 	if IsInElseBranch(t1) {

@@ -17,10 +17,12 @@ func IsInElseBranch(node *sitter.Node) bool {
 			return IsInElseBranch(parent)
 		}
 
-		logger.Println("ChildIndex is", childIndex)
-
-		if childIndex > 4 {
+		switch parent.FieldNameForChild(childIndex) {
+		case "option", "alertnative":
 			return true
+		default:
+			return false
+
 		}
 
 	}

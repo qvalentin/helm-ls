@@ -1,8 +1,9 @@
 package yamlls
 
 import (
-	lsplocal "github.com/mrjosh/helm-ls/internal/lsp"
 	"testing"
+
+	lsplocal "github.com/mrjosh/helm-ls/internal/lsp"
 )
 
 type TrimTemplateTestData struct {
@@ -172,11 +173,6 @@ metadata:
             httpGet:
               path: /healthz
               port: {{ .Values.controller.containerPorts.controller }}
-            initialDelaySeconds: {{ .Values.controller.startupProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.controller.startupProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.controller.startupProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.controller.startupProbe.successThreshold }}
-            failureThreshold: {{ .Values.controller.startupProbe.failureThreshold }}
           {{- end }}
 	  `,
 		trimmedText: `
@@ -187,11 +183,6 @@ metadata:
             httpGet:
               path: /healthz
               port: {{ .Values.controller.containerPorts.controller }}
-            initialDelaySeconds: {{ .Values.controller.startupProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.controller.startupProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.controller.startupProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.controller.startupProbe.successThreshold }}
-            failureThreshold: {{ .Values.controller.startupProbe.failureThreshold }}
                     
 	  `,
 	},

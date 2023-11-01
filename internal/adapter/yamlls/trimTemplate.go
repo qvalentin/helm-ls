@@ -6,7 +6,6 @@ import (
 
 func trimTemplateForYamllsFromAst(ast *sitter.Tree, text string) string {
 	var result = []byte(text)
-	// logger.Println(ast.RootNode())
 	prettyPrintNode(ast.RootNode(), []byte(text), result)
 	return string(result)
 }

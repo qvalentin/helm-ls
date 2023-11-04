@@ -24,6 +24,14 @@ func NewDocumentStore(fs FileStorage) *DocumentStore {
 	}
 }
 
+func (s *DocumentStore) GetAllDocs() []*Document {
+	var docs []*Document
+	for _, doc := range s.documents {
+		docs = append(docs, doc)
+	}
+	return docs
+}
+
 func (s *DocumentStore) DidOpen(params lsp.DidOpenTextDocumentParams) (*Document, error) {
 	//langID := params.TextDocument.LanguageID
 	//if langID != "markdown" && langID != "vimwiki" && langID != "pandoc" {

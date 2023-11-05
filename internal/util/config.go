@@ -5,16 +5,19 @@ type HelmlsConfiguration struct {
 }
 
 type YamllsConfiguration struct {
-	Enabled        bool           `json:"enabled,omitempty"`
-	Path           string         `json:"path,omitempty"`
-	YamllsSettings YamllsSettings `json:"config,omitempty"`
+	Enabled bool   `json:"enabled,omitempty"`
+	Path    string `json:"path,omitempty"`
+	// max diagnostics from yamlls that are shown for a single file
+	DiagnosticsLimit int            `json:"diagnosticsLimit,omitempty"`
+	YamllsSettings   YamllsSettings `json:"config,omitempty"`
 }
 
 var DefaultConfig = HelmlsConfiguration{
 	YamllsConfiguration: YamllsConfiguration{
-		Enabled:        true,
-		Path:           "yaml-language-server",
-		YamllsSettings: DefaultYamllsSettings,
+		Enabled:          true,
+		Path:             "yaml-language-server",
+		DiagnosticsLimit: 50,
+		YamllsSettings:   DefaultYamllsSettings,
 	},
 }
 

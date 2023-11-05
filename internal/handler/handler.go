@@ -96,7 +96,7 @@ func (h *langHandler) handleTextDocumentDidOpen(ctx context.Context, reply jsonr
 		return reply(ctx, nil, err)
 	}
 
-	doc, err := h.documents.DidOpen(params)
+	doc, err := h.documents.DidOpen(params, &h.helmlsConfig)
 	if err != nil {
 		logger.Println(err)
 		return reply(ctx, nil, err)

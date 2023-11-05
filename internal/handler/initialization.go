@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"os"
 
 	"github.com/mrjosh/helm-ls/internal/adapter/yamlls"
+	"github.com/mrjosh/helm-ls/internal/util"
 	"github.com/mrjosh/helm-ls/pkg/chartutil"
+	"github.com/sirupsen/logrus"
 	"go.lsp.dev/jsonrpc2"
 	lsp "go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
@@ -71,9 +74,27 @@ func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Repli
 }
 
 func (h *langHandler) initializationWithConfig(ctx context.Context) {
+	configureLogLevel(h.helmlsConfig)
+	configureYamlls(h)
+}
+
+func configureYamlls(h *langHandler) {
 	if h.helmlsConfig.YamllsConfiguration.Enabled {
 		h.yamllsConnector = yamlls.NewConnector(h.helmlsConfig.YamllsConfiguration, h.connPool, h.documents)
 		h.yamllsConnector.CallInitialize(h.projectFiles.RootURI)
 		h.yamllsConnector.InitiallySyncOpenDocuments()
+	}
+}
+
+func configureLogLevel(helmlsConfig util.HelmlsConfiguration) {
+	if level, err := logrus.ParseLevel(helmlsConfig.LogLevel); err == nil {
+		if os.Getenv("LOG_LEVEL") == "debug" {
+			logger.SetLevel(logrus.DebugLevel)
+		} else {
+			logger.SetLevel(level)
+		}
+		logger.SetLevel(level)
+	} else {
+		logger.Println("Error parsing log level", err)
 	}
 }

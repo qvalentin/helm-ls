@@ -13,8 +13,8 @@ type YamllsConfiguration struct {
 	// if set to false diagnostics will only be shown after saving the file
 	// otherwise writing a template will cause a lot of diagnostics to be shown because
 	// the structure of the document is broken during typing
-	ShowDiagnosticsDirectly bool           `json:"showDiagnosticsDirectly,omitempty"`
-	YamllsSettings          YamllsSettings `json:"config,omitempty"`
+	ShowDiagnosticsDirectly bool        `json:"showDiagnosticsDirectly,omitempty"`
+	YamllsSettings          interface{} `json:"config,omitempty"`
 }
 
 var DefaultConfig = HelmlsConfiguration{

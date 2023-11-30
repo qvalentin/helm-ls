@@ -34,6 +34,6 @@ func (h *langHandler) retrieveWorkspaceConfiguration(ctx context.Context) {
 		return
 	}
 
-	h.setConfig(result[0])
+	h.helmlsConfig = result[0]
 	h.initializationWithConfig(ctx)
 }

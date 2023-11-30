@@ -74,12 +74,12 @@ func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Repli
 }
 
 func (h *langHandler) initializationWithConfig(ctx context.Context) {
-	configureLogLevel(h.getConfig())
+	configureLogLevel(h.helmlsConfig)
 	configureYamlls(h)
 }
 
 func configureYamlls(h *langHandler) {
-	config := h.getConfig()
+	config := h.helmlsConfig
 	if config.YamllsConfiguration.Enabled {
 		h.yamllsConnector = yamlls.NewConnector(config.YamllsConfiguration, h.connPool, h.documents)
 		h.yamllsConnector.CallInitialize(h.projectFiles.RootURI)

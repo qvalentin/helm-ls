@@ -13,9 +13,8 @@ import (
 var logger = log.GetLogger()
 
 type YamllsConnector struct {
-	Conn      *jsonrpc2.Conn
-	documents *lsplocal.DocumentStore
-	config    util.YamllsConfiguration
+	Conn   *jsonrpc2.Conn
+	config util.YamllsConfiguration
 }
 
 func NewConnector(yamllsConfiguration util.YamllsConfiguration, clientConn jsonrpc2.Conn, documents *lsplocal.DocumentStore) *YamllsConnector {
@@ -55,7 +54,6 @@ func NewConnector(yamllsConfiguration util.YamllsConfiguration, clientConn jsonr
 	conn := jsonrpc2.NewConn(jsonrpc2.NewStream(readWriteCloser))
 	yamllsConnector.config = yamllsConfiguration
 	conn.Go(context.Background(), yamllsConnector.yamllsHandler(clientConn, documents))
-	yamllsConnector.documents = documents
 	yamllsConnector.Conn = &conn
 	return &yamllsConnector
 }

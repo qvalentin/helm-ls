@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
 
 	"github.com/mrjosh/helm-ls/internal/adapter/fs"
 	"github.com/mrjosh/helm-ls/internal/adapter/yamlls"
@@ -21,6 +22,7 @@ import (
 var logger = log.GetLogger()
 
 type langHandler struct {
+	sync.RWMutex
 	connPool        jsonrpc2.Conn
 	linterName      string
 	documents       *lsplocal.DocumentStore
@@ -31,6 +33,18 @@ type langHandler struct {
 	chartNode       yamlv3.Node
 	yamllsConnector *yamlls.YamllsConnector
 	helmlsConfig    util.HelmlsConfiguration
+}
+
+func (h *langHandler) setConfig(config util.HelmlsConfiguration) {
+	h.Lock()
+	defer h.Unlock()
+	h.helmlsConfig = config
+}
+
+func (h *langHandler) getConfig() (config util.HelmlsConfiguration) {
+	h.Lock()
+	defer h.Unlock()
+	return h.helmlsConfig
 }
 
 func NewHandler(connPool jsonrpc2.Conn) jsonrpc2.Handler {
@@ -96,7 +110,7 @@ func (h *langHandler) handleTextDocumentDidOpen(ctx context.Context, reply jsonr
 		return reply(ctx, nil, err)
 	}
 
-	doc, err := h.documents.DidOpen(params, &h.helmlsConfig)
+	doc, err := h.documents.DidOpen(params, h.getConfig())
 	if err != nil {
 		logger.Println(err)
 		return reply(ctx, nil, err)

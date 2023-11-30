@@ -9,11 +9,11 @@ import (
 	lsp "go.lsp.dev/protocol"
 )
 
-func (yamllsConnector YamllsConnector) InitiallySyncOpenDocuments() {
+func (yamllsConnector YamllsConnector) InitiallySyncOpenDocuments(docs []*lsplocal.Document) {
 	if yamllsConnector.Conn == nil {
 		return
 	}
-	for _, doc := range yamllsConnector.documents.GetAllDocs() {
+	for _, doc := range docs {
 		yamllsConnector.DocumentDidOpen(doc.Ast, lsp.DidOpenTextDocumentParams{
 			TextDocument: lsp.TextDocumentItem{
 				URI:  doc.URI,

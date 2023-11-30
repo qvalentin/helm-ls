@@ -29,7 +29,7 @@ type langHandler struct {
 	chartMetadata   chart.Metadata
 	valueNode       yamlv3.Node
 	chartNode       yamlv3.Node
-	yamllsConnector *yamlls.YamllsConnector
+	yamllsConnector *yamlls.Connector
 	helmlsConfig    util.HelmlsConfiguration
 }
 
@@ -45,7 +45,7 @@ func NewHandler(connPool jsonrpc2.Conn) jsonrpc2.Handler {
 		chartNode:       yamlv3.Node{},
 		documents:       documents,
 		helmlsConfig:    util.DefaultConfig,
-		yamllsConnector: &yamlls.YamllsConnector{},
+		yamllsConnector: &yamlls.Connector{},
 	}
 	logger.Printf("helm-lint-langserver: connections opened")
 	return jsonrpc2.ReplyHandler(handler.handle)

@@ -73,8 +73,8 @@ func prettyPrintNode(node *sitter.Node, previous []byte, result []byte) {
 }
 
 func trimFunctionCall(node *sitter.Node, previous []byte, result []byte) {
-	function_name := node.ChildByFieldName("function")
-	if function_name.Content(previous) == "include" {
+	functionName := node.ChildByFieldName("function")
+	if functionName.Content(previous) == "include" {
 		parent := node.Parent()
 		if parent != nil && parent.Type() == "chained_pipeline" {
 			earaseTemplateAndSiblings(parent, previous, result)

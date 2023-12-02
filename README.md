@@ -11,11 +11,11 @@
 </pre>
 
 ## Helm Language Server Protocol
-helm-ls is [helm](https://github.com/helm/helm) language server protocol [LSP](https://microsoft.github.io/language-server-protocol/).
+Helm-ls is a [helm](https://github.com/helm/helm) language server protocol [LSP](https://microsoft.github.io/language-server-protocol/) implementation.
 
 ## Getting Started
 ### Vim Helm Plugin
-You'll need [vim-helm](https://github.com/towolf/vim-helm) plugin installed before using helm_ls, Try to install it vim:
+You'll need [vim-helm](https://github.com/towolf/vim-helm) plugin installed before using helm_ls, to install it using vim-plug (or use your preferred plugin manager):
 ```lua
 Plug 'towolf/vim-helm'
 ```
@@ -31,6 +31,16 @@ curl -L https://github.com/mrjosh/helm-ls/releases/download/master/helm_ls_{os}_
 ### Make it executable
 ```bash
 chmod +x /usr/local/bin/helm_ls
+```
+
+### Integration with [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)
+Helm-ls will use yaml-language-server to provide additional capabilities, if it is installed.
+This feature is expermiental, you can disable it in the config (todo: link to config).
+Having a broken template syntax (e.g. while your are stil typing) will cause diagnostics from yaml-language-server to be shown as errors.
+
+To install it using npm run (or use your preferred package manager):
+```bash
+npm install --global yaml-language-server
 ```
 
 ## nvim-lspconfig setup

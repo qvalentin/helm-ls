@@ -94,6 +94,9 @@ func earaseTemplateAndSiblings(node *sitter.Node, previous []byte, result []byte
 }
 
 func earaseTemplate(node *sitter.Node, previous []byte, result []byte) {
+	if node == nil {
+		return
+	}
 	logger.Println("Content that is earased", node.Content(previous))
 	for i := range []byte(node.Content(previous)) {
 		result[int(node.StartByte())+i] = byte(' ')

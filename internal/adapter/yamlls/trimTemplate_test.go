@@ -239,6 +239,17 @@ metadata:
                
       `,
 	},
+	{
+		// todo: Handle this case better
+		documentText: `
+			{{ if }}
+			{{- end  -}}
+			`,
+		trimmedText: `
+			      }}
+			            
+			`,
+	},
 }
 
 func TestTrimTemplate(t *testing.T) {

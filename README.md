@@ -57,12 +57,23 @@ chmod +x /usr/local/bin/helm_ls
 
 ### Integration with [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)
 Helm-ls will use yaml-language-server to provide additional capabilities, if it is installed.
-This feature is expermiental, you can disable it in the config (todo: link to config).
+This feature is expermiental, you can disable it in the config ([see](#configuration-options)).
 Having a broken template syntax (e.g. while your are stil typing) will cause diagnostics from yaml-language-server to be shown as errors.
 
 To install it using npm run (or use your preferred package manager):
 ```bash
 npm install --global yaml-language-server
+```
+
+The default kubernetes schema of yaml-language-server will be used for all files. You can overwrite which schema to use in the config ([see](#configuration-options)).
+If you are for example using CRDs that are not included in the default schema, you can overwrite the schema using a comment
+to use the schemas from the [CRDs-catalog](https://github.com/datreeio/CRDs-catalog).
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/keda.sh/scaledobject_v1alpha1.json
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+...
 ```
 
 ## Configuration options

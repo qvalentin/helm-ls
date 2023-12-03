@@ -18,18 +18,13 @@ Helm-ls is a [helm](https://github.com/helm/helm) language server protocol [LSP]
 
 * [Demo](#demo)
 * [Getting Started](#getting-started)
-    * [Download](#download)
-    * [Make it executable](#make-it-executable)
-    * [Integration with yaml-language-server](#integration-with-yaml-language-server)
+  * [Download](#download)
+  * [Make it executable](#make-it-executable)
+  * [Integration with yaml-language-server](#integration-with-yaml-language-server)
 * [Configuration options](#configuration-options)
-    * [LSP Server](#lsp-server)
-    * [yaml-language-server config](#yaml-language-server-config)
-    * [Default Configuration](#default-configuration)
-* [Editor Config examples](#editor-config-examples)
-    * [Neovim (using nvim-lspconfig)](#neovim-using-nvim-lspconfig)
-        * [Vim Helm Plugin](#vim-helm-plugin)
-        * [Setup laguage server](#setup-laguage-server)
-    * [Emacs eglot setup](#emacs-eglot-setup)
+  * [LSP Server](#lsp-server)
+  * [yaml-language-server config](#yaml-language-server-config)
+  * [Emacs eglot setup](#emacs-eglot-setup)
 * [Contributing](#contributing)
 * [License](#license)
 
@@ -86,64 +81,64 @@ You can configure helm-ls with lsp workspace configurations.
 
 ### yaml-language-server config
 
-- **Enable yaml-language-server**: Toggle support of this feature.
-- **Path to yaml-language-server**: Specify the executable location.
-- **Diagnostics Settings**:
-  - **Limit**: Number of displayed diagnostics per file.
-  - **Show Directly**: Show diagnostics while typing.
+  - **Enable yaml-language-server**: Toggle support of this feature.
+  - **Path to yaml-language-server**: Specify the executable location.
+  - **Diagnostics Settings**:
+    - **Limit**: Number of displayed diagnostics per file.
+    - **Show Directly**: Show diagnostics while typing.
 
-- **Additional Settings** (see [yaml-language-server](https://github.com/redhat-developer/yaml-language-server#language-server-settings)):
-  - **Schemas**: Define YAML schemas.
-  - **Completion**: Enable code completion.
-  - **Hover Information**: Enable hover details.
+  - **Additional Settings** (see [yaml-language-server](https://github.com/redhat-developer/yaml-language-server#language-server-settings)):
+    - **Schemas**: Define YAML schemas.
+    - **Completion**: Enable code completion.
+    - **Hover Information**: Enable hover details.
 
-### Default Configuration
+  ### Default Configuration
 
-```lua
-settings = {
-  ['helm-ls'] = {
-    logLevel = "debug",
-    yamlls = {
-      enabled = true,
-      diagnosticsLimit = 50,
-      showDiagnosticsDirectly = false,
-      path = "yaml-language-server",
-      config = {
-        schemas = {
-          kubernetes = "**",
-        },
-        completion = true,
-        hover = true,
-        -- any other config: https://github.com/redhat-developer/yaml-language-server#language-server-settings
-      }
-    }
-  }
-}
-```
-
-## Editor Config examples
-
-### Neovim (using nvim-lspconfig)
-#### Vim Helm Plugin
-You'll need [vim-helm](https://github.com/towolf/vim-helm) plugin installed before using helm_ls, to install it using vim-plug (or use your preferred plugin manager):
-```lua
-Plug 'towolf/vim-helm'
-```
-
-#### Setup laguage server
-```lua
-local lspconfig = require('lspconfig')
-
-lspconfig.helm_ls.setup {
+  ```lua
   settings = {
     ['helm-ls'] = {
+      logLevel = "debug",
       yamlls = {
+        enabled = true,
+        diagnosticsLimit = 50,
+        showDiagnosticsDirectly = false,
         path = "yaml-language-server",
+        config = {
+          schemas = {
+            kubernetes = "**",
+          },
+          completion = true,
+          hover = true,
+          -- any other config: https://github.com/redhat-developer/yaml-language-server#language-server-settings
+        }
       }
     }
   }
-}
-```
+  ```
+
+  ## Editor Config examples
+
+  ### Neovim (using nvim-lspconfig)
+  #### Vim Helm Plugin
+  You'll need [vim-helm](https://github.com/towolf/vim-helm) plugin installed before using helm_ls, to install it using vim-plug (or use your preferred plugin manager):
+  ```lua
+  Plug 'towolf/vim-helm'
+  ```
+
+  #### Setup laguage server
+  ```lua
+  local lspconfig = require('lspconfig')
+
+  lspconfig.helm_ls.setup {
+    settings = {
+      ['helm-ls'] = {
+        yamlls = {
+          path = "yaml-language-server",
+        }
+      }
+    }
+  }
+  ```
 See [examples/nvim/init.lua](https://github.com/mrjosh/helm-ls/blob/master/examples/nvim/init.lua) for an
 complete example, which also includes yaml-language-server.
 

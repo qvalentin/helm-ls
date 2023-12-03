@@ -1,3 +1,4 @@
+-- setup lazy plugin manager
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
@@ -10,17 +11,20 @@ if not vim.loop.fs_stat(lazypath) then
   })
 end
 vim.opt.rtp:prepend(lazypath)
-
-vim.g.mapleader = " " -- Make sure to set `mapleader` before lazy so your mappings are correct
+vim.g.mapleader = " "
 
 require("lazy").setup({
-  { "sheerun/vim-polyglot",  lazy = false }, -- this contains 'towolf/vim-helm' but fixes some error, where yamlls would also be launched for helm files
+  -- towolf/vim-helm provides basic syntax highlighting and filetype detection
+  -- ft = 'helm' is important to not start yamlls
+  { 'towolf/vim-helm',       ft = 'helm' },
+
   { "neovim/nvim-lspconfig", event = { "BufReadPre", "BufNewFile", "BufEnter" } }
 })
 
+
 local lspconfig = require('lspconfig')
 
-
+-- setup helm-ls
 lspconfig.helm_ls.setup {
   settings = {
     ['helm-ls'] = {
@@ -31,8 +35,5 @@ lspconfig.helm_ls.setup {
   }
 }
 
-lspconfig.yamlls.setup {
-  -- filetypes = vim.tbl_filter(function(ft)
-  --   return not vim.tbl_contains({ "helm" }, ft)
-  -- end, { 'yaml', 'yaml.docker-compose' }),
-}
+-- setup yamlls
+lspconfig.yamlls.setup {}

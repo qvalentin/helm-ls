@@ -20,9 +20,43 @@ func NodeAtPosition(tree *sitter.Tree, position lsp.Position) *sitter.Node {
 	return tree.RootNode().NamedDescendantForPointRange(start, start)
 }
 
+func FindDirectChildNodeByStart(currentNode *sitter.Node, pointToLookUp sitter.Point) *sitter.Node {
+	for i := 0; i < int(currentNode.ChildCount()); i++ {
+		child := currentNode.Child(i)
+		if child.StartPoint().Column == pointToLookUp.Column && child.StartPoint().Row == pointToLookUp.Row {
+			return child
+		}
+	}
+	return currentNode
+}
+
+func FindRelevantChildNode(currentNode *sitter.Node, pointToLookUp sitter.Point) *sitter.Node {
+	for i := 0; i < int(currentNode.ChildCount()); i++ {
+		child := currentNode.Child(i)
+		if isPointLargerOrEq(pointToLookUp, child.StartPoint()) && isPointLargerOrEq(child.EndPoint(), pointToLookUp) {
+			return FindRelevantChildNode(child, pointToLookUp)
+		}
+	}
+	return currentNode
+}
+
+func isPointLarger(a sitter.Point, b sitter.Point) bool {
+	if a.Row == b.Row {
+		return a.Column > b.Column
+	}
+	return a.Row > b.Row
+}
+
+func isPointLargerOrEq(a sitter.Point, b sitter.Point) bool {
+	if a.Row == b.Row {
+		return a.Column >= b.Column
+	}
+	return a.Row > b.Row
+}
+
 func GetFieldIdentifierPath(node *sitter.Node, doc *Document) (path string) {
 	path = buildFieldIdentifierPath(node, doc)
-	logger.Println("buildFieldIdentifierPath:", path)
+	logger.Debug("buildFieldIdentifierPath:", path)
 	return path
 }
 
@@ -62,13 +96,13 @@ func TraverseIdentifierPathUp(node *sitter.Node, doc *Document) string {
 		if node.PrevNamedSibling() == nil {
 			return TraverseIdentifierPathUp(parent, doc)
 		}
-		logger.Println("Range action found ")
+		logger.Debug("Range action found")
 		return TraverseIdentifierPathUp(parent, doc) + parent.NamedChild(0).Content([]byte(doc.Content)) + "[0]"
 	case "with_action":
 		if node.PrevNamedSibling() == nil {
 			return TraverseIdentifierPathUp(parent, doc)
 		}
-		logger.Println("With action found")
+		logger.Debug("With action found")
 		return TraverseIdentifierPathUp(parent, doc) + parent.NamedChild(0).Content([]byte(doc.Content))
 	}
 	return TraverseIdentifierPathUp(parent, doc)
@@ -91,5 +125,12 @@ func GetLspRangeForNode(node *sitter.Node) lsp.Range {
 			Line:      end.Row,
 			Character: end.Column,
 		},
+	}
+}
+
+func GetSitterPointForLspPos(pos lsp.Position) sitter.Point {
+	return sitter.Point{
+		Row:    pos.Line,
+		Column: pos.Character,
 	}
 }

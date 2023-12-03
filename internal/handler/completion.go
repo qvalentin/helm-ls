@@ -10,19 +10,12 @@ import (
 	"strings"
 
 	lsplocal "github.com/mrjosh/helm-ls/internal/lsp"
+	gotemplate "github.com/mrjosh/helm-ls/internal/tree-sitter/gotemplate"
 	"github.com/mrjosh/helm-ls/pkg/chartutil"
 	sitter "github.com/smacker/go-tree-sitter"
 	"go.lsp.dev/jsonrpc2"
 	lsp "go.lsp.dev/protocol"
 	yaml "gopkg.in/yaml.v2"
-)
-
-type ChildNodeType string
-
-const (
-	ChildNodeTypeIdentifier = "identifier"
-	ChildNodeTypeDot        = "dot"
-	ChildNodeTypeDotSymbol  = "."
 )
 
 var (
@@ -52,8 +45,13 @@ func (h *langHandler) handleTextDocumentCompletion(ctx context.Context, reply js
 		return errors.New("Could not get document: " + params.TextDocument.URI.Filename())
 	}
 
+	word, isTextNode := completionAstParsing(doc, params.Position)
+
+	if isTextNode {
+		return yamllsCompletions(err, h, ctx, params, reply)
+	}
+
 	var (
-		word             = completionAstParsing(doc, params.Position)
 		splitted         = strings.Split(word, ".")
 		items            []lsp.CompletionItem
 		variableSplitted = []string{}
@@ -99,51 +97,39 @@ func (h *langHandler) handleTextDocumentCompletion(ctx context.Context, reply js
 	return reply(ctx, items, err)
 }
 
-func completionAstParsing(doc *lsplocal.Document, position lsp.Position) string {
+func yamllsCompletions(err error, h *langHandler, ctx context.Context, params lsp.CompletionParams, reply jsonrpc2.Replier) error {
+	response := *h.yamllsConnector.CallCompletion(params)
+	logger.Debug("Got completions from yamlls", response)
+	return reply(ctx, response, err)
+}
 
+func completionAstParsing(doc *lsplocal.Document, position lsp.Position) (string, bool) {
 	var (
 		currentNode   = lsplocal.NodeAtPosition(doc.Ast, position)
 		pointToLoopUp = sitter.Point{
 			Row:    position.Line,
 			Column: position.Character,
 		}
-		relevantChildNode = findRelevantChildNode(currentNode, pointToLoopUp)
+		relevantChildNode = lsplocal.FindRelevantChildNode(currentNode, pointToLoopUp)
 		word              string
 	)
 
-	logger.Println("currentNode", currentNode)
-	logger.Println("relevantChildNode", relevantChildNode.Type())
+	logger.Debug("currentNode", currentNode)
+	logger.Debug("relevantChildNode", relevantChildNode.Type())
 
 	switch relevantChildNode.Type() {
-	case ChildNodeTypeIdentifier:
+	case gotemplate.NodeTypeIdentifier:
 		word = relevantChildNode.Content([]byte(doc.Content))
-	case ChildNodeTypeDot:
-		logger.Println("TraverseIdentifierPathUp")
+	case gotemplate.NodeTypeDot:
+		logger.Debug("TraverseIdentifierPathUp")
 		word = lsplocal.TraverseIdentifierPathUp(relevantChildNode, doc)
-	case ChildNodeTypeDotSymbol:
-		logger.Println("GetFieldIdentifierPath")
+	case gotemplate.NodeTypeDotSymbol:
+		logger.Debug("GetFieldIdentifierPath")
 		word = lsplocal.GetFieldIdentifierPath(relevantChildNode, doc)
+	case gotemplate.NodeTypeText:
+		return word, true
 	}
-
-	return word
-}
-
-func findRelevantChildNode(currentNode *sitter.Node, pointToLookUp sitter.Point) *sitter.Node {
-	for i := 0; i < int(currentNode.ChildCount()); i++ {
-		child := currentNode.Child(i)
-		if isPointLargerOrEq(pointToLookUp, child.StartPoint()) && isPointLargerOrEq(child.EndPoint(), pointToLookUp) {
-			logger.Println("loop", child)
-			return findRelevantChildNode(child, pointToLookUp)
-		}
-	}
-	return currentNode
-}
-
-func isPointLargerOrEq(a sitter.Point, b sitter.Point) bool {
-	if a.Row == b.Row {
-		return a.Column >= b.Column
-	}
-	return a.Row > b.Row
+	return word, false
 }
 
 func (h *langHandler) getValue(values chartutil.Values, splittedVar []string) []lsp.CompletionItem {

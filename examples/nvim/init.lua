@@ -1,3 +1,5 @@
+-- a minimal example config for setting up neovim with helm-ls and yamlls
+
 -- setup lazy plugin manager
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then

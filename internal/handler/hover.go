@@ -52,7 +52,7 @@ func (h *langHandler) handleHover(ctx context.Context, reply jsonrpc2.Replier, r
 		if len(word) > 2 && string(word[len(word)-1]) == ":" {
 			word = word[0 : len(word)-1]
 		}
-		var response = h.yamllsConnector.CallHover(params, word)
+		var response = *h.yamllsConnector.CallHover(params, word)
 		return reply(ctx, response, err)
 	}
 	if pt == "function_call" && ct == "identifier" {

@@ -8,38 +8,49 @@ import (
 	lsp "go.lsp.dev/protocol"
 )
 
-// Calls the Completion method of yamlls to get a fitting hover response
-// TODO: clarify why the hover method of yamlls can't be used
-func (yamllsConnector Connector) CallHover(params lsp.HoverParams, word string) *lsp.Hover {
+// Calls the Hover method of yamlls to get a fitting hover response
+// If hover returns nothing appropriate, calls yamlls for completions
+func (yamllsConnector Connector) CallHover(ctx context.Context, params lsp.HoverParams, word string) (*lsp.Hover, error) {
 	if yamllsConnector.Conn == nil {
-		return &lsp.Hover{}
+		return &lsp.Hover{}, nil
 	}
 
+	hoverResponse, err := (yamllsConnector).getHoverFromHover(ctx, params)
+	if err != nil {
+		return hoverResponse, err
+	}
+
+	if hoverResponse.Contents.Value != "" {
+		return hoverResponse, nil
+	}
+	return (yamllsConnector).getHoverFromCompletion(ctx, params, word)
+}
+
+func (yamllsConnector Connector) getHoverFromHover(ctx context.Context, params lsp.HoverParams) (*lsp.Hover, error) {
+
+	var hoverResponse = reflect.New(reflect.TypeOf(lsp.Hover{})).Interface()
+	_, err := (*yamllsConnector.Conn).Call(ctx, lsp.MethodTextDocumentHover, params, hoverResponse)
+	if err != nil {
+		logger.Error("Error calling yamlls for hover", err)
+		return &lsp.Hover{}, err
+	}
+	logger.Debug("Got hover from yamlls", hoverResponse.(*lsp.Hover).Contents.Value)
+	return hoverResponse.(*lsp.Hover), nil
+}
+
+func (yamllsConnector Connector) getHoverFromCompletion(ctx context.Context, params lsp.HoverParams, word string) (*lsp.Hover, error) {
 	var (
+		err                error
 		documentation      string
-		hoverResponse      = reflect.New(reflect.TypeOf(lsp.Hover{})).Interface()
 		completionResponse = reflect.New(reflect.TypeOf(lsp.CompletionList{})).Interface()
 		completionParams   = lsp.CompletionParams{
 			TextDocumentPositionParams: params.TextDocumentPositionParams,
 		}
 	)
-
-	_, err := (*yamllsConnector.Conn).Call(context.Background(), lsp.MethodTextDocumentHover, completionParams, hoverResponse)
-	if err != nil {
-		logger.Error("Error calling yamlls for hover", err)
-		return &lsp.Hover{}
-	}
-
-	logger.Debug("Got hover from yamlls", hoverResponse.(*lsp.Hover).Contents.Value)
-
-	if hoverResponse.(*lsp.Hover).Contents.Value != "" {
-		return hoverResponse.(*lsp.Hover)
-	}
-
-	_, err = (*yamllsConnector.Conn).Call(context.Background(), lsp.MethodTextDocumentCompletion, completionParams, completionResponse)
+	_, err = (*yamllsConnector.Conn).Call(ctx, lsp.MethodTextDocumentCompletion, completionParams, completionResponse)
 	if err != nil {
 		logger.Error("Error calling yamlls for Completion", err)
-		return &lsp.Hover{}
+		return &lsp.Hover{}, err
 	}
 
 	for _, completionItem := range completionResponse.(*lsp.CompletionList).Items {
@@ -50,5 +61,5 @@ func (yamllsConnector Connector) CallHover(params lsp.HoverParams, word string) 
 	}
 
 	response := util.BuildHoverResponse(documentation, lsp.Range{})
-	return &response
+	return &response, nil
 }

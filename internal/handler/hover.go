@@ -103,6 +103,9 @@ func (h *langHandler) handleHover(ctx context.Context, reply jsonrpc2.Replier, r
 		}
 
 		if err == nil {
+			if value == "" {
+				value = "\"\""
+			}
 			result := util.BuildHoverResponse(value, wordRange)
 			return reply(ctx, result, err)
 		}

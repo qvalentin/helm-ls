@@ -18,15 +18,18 @@ import (
 func (h *langHandler) handleInitialize(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 
 	var params lsp.InitializeParams
+	logger.Debug("handleInitialize")
 	if err := json.Unmarshal(req.Params(), &params); err != nil {
 		return err
 	}
 
 	if len(params.WorkspaceFolders) == 0 {
+		logger.Error("length WorkspaceFolders is 0")
 		return errors.New("length WorkspaceFolders is 0")
 	}
 
 	workspaceURI, err := uri.Parse(params.WorkspaceFolders[0].URI)
+	logger.Debug("Workspace URI: ", workspaceURI)
 	h.yamllsConnector.CallInitialize(workspaceURI)
 
 	h.projectFiles = NewProjectFiles(workspaceURI, "")

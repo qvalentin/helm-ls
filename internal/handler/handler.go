@@ -47,7 +47,8 @@ func NewHandler(connPool jsonrpc2.Conn) jsonrpc2.Handler {
 		helmlsConfig:    util.DefaultConfig,
 		yamllsConnector: &yamlls.Connector{},
 	}
-	logger.Printf("helm-lint-langserver: connections opened")
+	logger.Printf("helm-langserver: connections opened")
+	logger.Debug("Using debug log level")
 	return jsonrpc2.ReplyHandler(handler.handle)
 }
 

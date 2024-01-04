@@ -18,9 +18,30 @@ vim.g.mapleader = " "
 require("lazy").setup({
   -- towolf/vim-helm provides basic syntax highlighting and filetype detection
   -- ft = 'helm' is important to not start yamlls
-  { 'towolf/vim-helm',       ft = 'helm' },
+  --
+  -- This is not needed when using treesitter (see below)
+  -- { 'towolf/vim-helm',       ft = 'helm' },
 
-  { "neovim/nvim-lspconfig", event = { "BufReadPre", "BufNewFile", "BufEnter" } }
+  { "neovim/nvim-lspconfig", event = { "BufReadPre", "BufNewFile", "BufEnter" } },
+  {
+    "kmoschcau/tree-sitter-go-template",
+    dependencies = "nvim-treesitter/nvim-treesitter",
+    config = true,
+  },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+    config = function()
+      local configs = require("nvim-treesitter.configs")
+
+      configs.setup({
+        ensure_installed = { "gotmpl" },
+        highlight = { enable = true },
+        indent = { enable = true },
+      })
+    end
+
+  }
 })
 
 
